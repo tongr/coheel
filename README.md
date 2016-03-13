@@ -27,6 +27,8 @@ bin/run --configuration cluster_tenem --program surface-link-probs
 bin/prepare-tries.sh
 # .. upload tries manually to locations specified in the configuration
 bin/run --configuration cluster_tenem --program training-data
+# download test and training set
+bin/download-training-data.sh
 # training
 mvn scala:run -Dlauncher=MachineLearningTestSuite
 
