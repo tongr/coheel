@@ -25,6 +25,7 @@ object CoheelClassifier {
 	)
 
 	val FEATURE_DEFINITION = {
+		val booleanAttrValues = util.Arrays.asList("false","true")
 		val attrs = new util.ArrayList[Attribute](NUMBER_OF_FEATURES + 1)
 		// basic features
 		attrs.add(new Attribute("prom"))
@@ -37,6 +38,7 @@ object CoheelClassifier {
 		attrs.add(new Attribute("contextDeltaSucc"))
 		attrs.add(new Attribute("surfaceLinkProb"))
 		// pos tags
+		//TODO check if boolean attr
 		attrs.add(new Attribute("NN"))
 		attrs.add(new Attribute("NNP"))
 		attrs.add(new Attribute("JJ"))
@@ -45,7 +47,7 @@ object CoheelClassifier {
 		attrs.add(new Attribute("SYM"))
 		attrs.add(new Attribute("W"))
 		// entity types
-		EntityTypes.values.foreach(t => attrs.add(new Attribute(t.toString)))
+		EntityTypes.values.foreach(t => attrs.add(new Attribute(t.toString, booleanAttrValues)))
 
 		val classAttrValues = new util.ArrayList[String](2)
 		classAttrValues.add("0.0")
