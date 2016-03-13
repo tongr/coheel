@@ -2,7 +2,7 @@ package de.uni_potsdam.hpi.coheel.ml
 
 import java.util
 
-import de.uni_potsdam.hpi.coheel.programs.DataClasses.{ClassificationInfo, FeatureLine}
+import de.uni_potsdam.hpi.coheel.programs.DataClasses.{EntityTypes, ClassificationInfo, FeatureLine}
 import weka.classifiers.Classifier
 import weka.core.Attribute
 import weka.core.Instances
@@ -11,7 +11,7 @@ import weka.core.DenseInstance
 
 object CoheelClassifier {
 
-	val NUMBER_OF_FEATURES = 16 // excluding class attribute
+	val NUMBER_OF_FEATURES = 16 + EntityTypes.values.size // excluding class attribute
 	val POSITIVE_CLASS = 1.0
 
 	val POS_TAG_GROUPS = Array(
@@ -44,6 +44,8 @@ object CoheelClassifier {
 		attrs.add(new Attribute("CD"))
 		attrs.add(new Attribute("SYM"))
 		attrs.add(new Attribute("W"))
+		// entity types
+		EntityTypes.values.foreach(t => attrs.add(new Attribute(t.toString)))
 
 		val classAttrValues = new util.ArrayList[String](2)
 		classAttrValues.add("0.0")
