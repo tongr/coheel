@@ -128,13 +128,14 @@ class WikipediaTrainingProgram extends NoParamCoheelProgram with Serializable {
 
 		val surfaceProbs = surfaceDestinationCountsUnresolved.iterate(3)(iterate)
 			.groupBy("surface")
-			.reduceGroup { (groupIt, out: Collector[(String, String, Double)]) =>
+			.reduceGroup { (groupIt, out: Collector[(String, String, Double, Int)]) =>
 				val surfaceGroup = groupIt.toSeq
 				val surface = surfaceGroup.head.surface
-				val size = surfaceGroup.map(_.count).sum
+				val size = surfaceGroup.map(_.count).sum.toDouble
 				surfaceGroup.groupBy(_.destination)
 					.foreach { case (destination, destinationGroup) =>
-						out.collect((surface, destination, destinationGroup.map(_.count).sum.toDouble / size))
+						val sumCount = destinationGroup.map(_.count).sum
+						out.collect((surface, destination, sumCount / size, sumCount))
 					}
 			}
 
