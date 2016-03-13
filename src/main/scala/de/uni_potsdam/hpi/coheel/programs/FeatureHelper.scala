@@ -8,6 +8,7 @@ import org.apache.flink.api.scala._
 import de.uni_potsdam.hpi.coheel.io.OutputFiles._
 
 import scala.reflect.ClassTag
+import scala.util.{Failure, Success, Try}
 
 /**
  * Helper routines for creating the features.
@@ -33,11 +34,16 @@ object FeatureHelper {
 
 		allCandidatesWithIndex.foreach { case (classifiable, i) =>
 			import classifiable._
+			EntityTypes.values.toBitMask
+
+			// create 'boolean' vector for assigned entity types
+			val types = new Array[Double](EntityTypes.values.size)
+			classifiable.entityTypes.foreach(type_val => types(type_val.id)=1.0)
 			val features = List(
 				surfaceProb, surfaceRank(i), surfaceDeltaTops(i), surfaceDeltaSuccs(i),
 				contextProb, contextRank(i), contextDeltaTops(i), contextDeltaSuccs(i),
 				surfaceLinkProb
-			) ::: classifiable.info.furtherFeatures(classifiable)
+			) ::: types.toList ::: classifiable.info.furtherFeatures(classifiable)
 			featureLineIteratorFunction(FeatureLine[T](id, surfaceRepr, candidateEntity, classifiable.info, features))
 		}
 	}
@@ -51,9 +57,10 @@ object FeatureHelper {
 			.equalTo("surface")
 			.name("Join: Classifiable With Surface Probs")
 			.map { joinResult => joinResult match {
-				case (classifiable, SurfaceProb(_, candidateEntity, surfaceProb)) =>
+				case (classifiable, SurfaceProb(_, candidateEntity, surfaceProb, _, candidateTypes)) =>
 					// enrich classifiable with possible candidate entities and their surface probabilities
-					classifiable.withCandidateEntityAndSurfaceProb(candidateEntity, surfaceProb)
+					//classifiable.withCandidateEntityAndSurfaceProb(candidateEntity, surfaceProb)
+					classifiable.withTypedCandidateEntityAndSurfaceProb(candidateEntity, surfaceProb, candidateTypes)
 			}
 		}.name("Classifiable with Candidates")
 
@@ -84,16 +91,26 @@ object FeatureHelper {
 	}
 
 	private def readSurfaceProbs(env: ExecutionEnvironment, threshold: Double = 0.0): DataSet[SurfaceProb] = {
-		env.readTextFile(surfaceProbsPath).flatMap { line =>
+		env.readTextFile(surfaceProbsTypedPath).flatMap { line =>
 			val split = line.split('\t')
 			if (split.length > 1) {
 				val tokens = split(0).split(' ')
 				if (tokens.nonEmpty) {
-					val prob = split(2).toDouble
-					if (prob > threshold)
-						Some(SurfaceProb(split(0), split(1), prob))
-					else
-						None
+					Try({
+						val prob = split(2).toDouble
+						val count = split(3).toInt
+						val types = split(4).split(' ').map(EntityTypes.withName(_))
+						if (prob > threshold)
+							Some(SurfaceProb(split(0), split(1), prob, count, types))
+						else
+							None
+					}) match	{
+						case Success(values) => values
+						case Failure(e) => {
+							log.error(s"Discarding '${line}' because of ${e.getClass.getSimpleName} (${e.getMessage.replace('\n', ' ')})")
+							None
+						}
+					}
 				}
 				else
 					None

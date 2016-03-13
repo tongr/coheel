@@ -17,6 +17,7 @@ object OutputFiles {
 	lazy val outputPath = FlinkProgramRunner.config.getString("output_files_dir")
 
 	lazy val surfaceProbsPath                 = s"${outputPath}surface-probs.wiki"
+	lazy val surfaceProbsTypedPath            = s"${outputPath}typed_surfaces.wiki"
 	lazy val contextLinkProbsPath             = s"${outputPath}context-link-probs.wiki"
 	lazy val languageModelsPath               = s"${outputPath}language-model-probs.wiki"
 	lazy val documentWordCountsPath           = s"${outputPath}document-word-counts.wiki"
@@ -30,7 +31,7 @@ object OutputFiles {
 	lazy val entireTextSurfacesPath           = s"${outputPath}entire-text-surfaces.wiki"
 	lazy val surfaceLinkProbsPath             = s"${outputPath}surface-link-probs.wiki"
 	lazy val trainingDataClassifiablesPath    = s"${outputPath}training-data-classifiables"
-	lazy val trainingDataPath                 = s"${outputPath}training-data"
+	lazy val trainingDataPath                 = s"${outputPath}typed-training-data"
 	lazy val trainingDataPagesPath            = s"${outputPath}training-data-pages"
 	lazy val bestPracticesPath                = s"${outputPath}best-practices.wiki"
 	lazy val debug1Path                       = s"${outputPath}debug1.wiki"

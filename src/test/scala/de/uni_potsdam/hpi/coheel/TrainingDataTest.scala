@@ -13,8 +13,8 @@ import scala.collection.mutable
 class TrainingDataTest extends FunSuite {
 
 	val classifiables = Iterable(
-		Classifiable(s"${FeatureHelper.TRIE_HIT_MARKER}-id", "surfaceRepr", Array("context"), "candidateEntity", 1.0, 1.0, 1.0, TrainInfo("source", "destination", Array[Double]())),
-		Classifiable(s"${FeatureHelper.TRIE_HIT_MARKER}-id", "surfaceRepr", Array("context"), "otherEntity", 1.0, 1.0, 1.0, TrainInfo("source", "destination", Array[Double]()))
+		Classifiable(s"${FeatureHelper.TRIE_HIT_MARKER}-id", "surfaceRepr", Array("context"), "candidateEntity", 1.0, 1.0, 1.0, Array(), TrainInfo("source", "destination", Array[Double]())),
+		Classifiable(s"${FeatureHelper.TRIE_HIT_MARKER}-id", "surfaceRepr", Array("context"), "otherEntity", 1.0, 1.0, 1.0, Array(), TrainInfo("source", "destination", Array[Double]()))
 	).asJava
 
 	test("TrainingDataStrategies.REMOVE_ENTIRE_GROUP") {

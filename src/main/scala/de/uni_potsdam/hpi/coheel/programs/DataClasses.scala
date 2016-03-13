@@ -97,17 +97,22 @@ object DataClasses {
 			surfaceProb: Double = -1.0,
 			surfaceLinkProb: Double,
 			contextProb: Double = -1.0,
+			entityTypes: Array[EntityTypes.Value] = Array[EntityTypes.Value](),
 			info: T) {
 
 		def isTrieHit: Boolean = id.startsWith(FeatureHelper.TRIE_HIT_MARKER)
 		def isLink: Boolean = id.startsWith(FeatureHelper.LINK_MARKER)
 
 		def withCandidateEntityAndSurfaceProb(newCandidateEntity: String, newSurfaceProb: Double): Classifiable[T] = {
-			Classifiable[T](id, surfaceRepr, context, newCandidateEntity, newSurfaceProb, surfaceLinkProb, contextProb, info)
+			Classifiable[T](id, surfaceRepr, context, newCandidateEntity, newSurfaceProb, surfaceLinkProb, contextProb, entityTypes, info)
+		}
+
+		def withTypedCandidateEntityAndSurfaceProb(newCandidateEntity: String, newSurfaceProb: Double, entityTypes: Array[EntityTypes.Value]): Classifiable[T] = {
+			Classifiable[T](id, surfaceRepr, context, newCandidateEntity, newSurfaceProb, surfaceLinkProb, contextProb, entityTypes, info)
 		}
 
 		def withContextProb(newContextProb: Double): Classifiable[T] = {
-			Classifiable[T](id, surfaceRepr, Array[String](), candidateEntity, surfaceProb, surfaceLinkProb, newContextProb, info)
+			Classifiable[T](id, surfaceRepr, Array[String](), candidateEntity, surfaceProb, surfaceLinkProb, newContextProb, entityTypes, info)
 		}
 	}
 
@@ -179,8 +184,32 @@ object DataClasses {
 		tokensStemmed: mutable.ArrayBuffer[String],
 		tokensUnstemmed: mutable.ArrayBuffer[String],
 		tags: mutable.ArrayBuffer[String])
-	case class SurfaceProb(surface: String, destination: String, prob: Double)
 
+	case class SurfaceProb(surface: String, destination: String, prob: Double, occurrences: Int, types:Array[EntityTypes.Value])
+	object EntityTypes extends Enumeration {
+		// possible types
+		val Untyped = Value("<>")
+		val Person = Value("<http://xmlns.com/foaf/0.1/Person>")
+		val Place = Value("<http://schema.org/Place>")
+		val CreativeWork = Value("<http://schema.org/CreativeWork>")
+		val Species = Value("<http://dbpedia.org/ontology/Species>")
+		val Organization = Value("<http://schema.org/Organization>")
+		val Event = Value("<http://schema.org/Event>")
+		val MeanOfTransportation = Value("<http://dbpedia.org/ontology/MeanOfTransportation>")
+		val SportsSeason = Value("<http://dbpedia.org/ontology/SportsSeason>")
+		val Device = Value("<http://dbpedia.org/ontology/Device>")
+		val Biomolecule = Value("<http://dbpedia.org/ontology/Biomolecule>")
+		val ChemicalSubstance = Value("<http://dbpedia.org/ontology/ChemicalSubstance>")
+		val Language = Value("<http://schema.org/Language>")
+		val Medicine = Value("<http://dbpedia.org/ontology/Medicine>")
+		val Name = Value("<http://dbpedia.org/ontology/Name>")
+		val AnatomicalStructure = Value("<http://dbpedia.org/ontology/AnatomicalStructure>")
+		val TimePeriod = Value("<http://dbpedia.org/ontology/TimePeriod>")
+		val TopicalConcept = Value("<http://dbpedia.org/ontology/TopicalConcept>")
+		val UnitOfWork = Value("<http://dbpedia.org/ontology/UnitOfWork>")
+		val CelestialBody = Value("<http://dbpedia.org/ontology/CelestialBody>")
+		val Product = Value("<http://schema.org/Product>")
+	}
 	case class Neighbour(entity: String, prob: Double)
 
 	case class Neighbours(entity: String, in: mutable.Buffer[Neighbour], out: mutable.Buffer[Neighbour])
