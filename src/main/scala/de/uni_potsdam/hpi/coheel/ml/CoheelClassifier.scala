@@ -4,10 +4,7 @@ import java.util
 
 import de.uni_potsdam.hpi.coheel.programs.DataClasses.{EntityTypes, ClassificationInfo, FeatureLine}
 import weka.classifiers.Classifier
-import weka.core.Attribute
-import weka.core.Instances
-import weka.core.Instance
-import weka.core.DenseInstance
+import weka.core._
 
 object CoheelClassifier {
 
@@ -102,7 +99,9 @@ class CoheelClassifier(classifier: Classifier) {
 
 	private def buildInstance(featureLine: FeatureLine[ClassificationInfo]): Instance = {
 		val attValues = featureLine.features.toArray
-		val instance = new DenseInstance(1.0, attValues)
+		//val instance = new DenseInstance(1.0, attValues)
+		// should use less memory (due to very sparse POS- and EntityType-attributes)
+		val instance = new SparseInstance(1.0, attValues)
 		instance
 	}
 }
