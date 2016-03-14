@@ -65,7 +65,7 @@ class CoheelClassifier(classifier: Classifier) {
 	 * @param featureLine The features of all possible links.
 	 * @return The predicted link or None, if no link is predicted.
 	 */
-	def classifyResultsWithSeedLogic(featureLine: Seq[FeatureLine[ClassificationInfo]]): Option[FeatureLine[ClassificationInfo]] = {
+	def classifyResultsWithSeedLogic(featureLine: Seq[FeatureLine[ClassificationInfo]]): scala.Option[FeatureLine[ClassificationInfo]] = {
 		var positivePredictions = List[FeatureLine[ClassificationInfo]]()
 		featureLine.foreach { featureLine =>
 			assert(featureLine.features.size == CoheelClassifier.NUMBER_OF_FEATURES || featureLine.features.size == CoheelClassifier.NUMBER_OF_FEATURES + 1)
