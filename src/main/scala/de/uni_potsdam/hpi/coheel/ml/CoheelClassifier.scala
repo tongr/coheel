@@ -34,6 +34,8 @@ object CoheelClassifier {
 		attrs.add(new Attribute("contextDeltaTop"))
 		attrs.add(new Attribute("contextDeltaSucc"))
 		attrs.add(new Attribute("surfaceLinkProb"))
+		// entity types
+		EntityTypes.values.foreach(t => attrs.add(new Attribute(t.toString, booleanAttrValues)))
 		// pos tags
 		attrs.add(new Attribute("NN", booleanAttrValues))
 		attrs.add(new Attribute("NNP", booleanAttrValues))
@@ -42,8 +44,6 @@ object CoheelClassifier {
 		attrs.add(new Attribute("CD", booleanAttrValues))
 		attrs.add(new Attribute("SYM", booleanAttrValues))
 		attrs.add(new Attribute("W", booleanAttrValues))
-		// entity types
-		EntityTypes.values.foreach(t => attrs.add(new Attribute(t.toString, booleanAttrValues)))
 
 		val classAttrValues = new util.ArrayList[String](2)
 		classAttrValues.add("0.0")
