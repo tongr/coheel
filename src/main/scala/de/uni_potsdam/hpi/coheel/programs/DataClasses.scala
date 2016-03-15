@@ -132,17 +132,31 @@ object DataClasses {
 	abstract class Info {
 		// Maybe move further features from Info to extra class? It's not really extra info?
 		def furtherFeatures(classifiable: Classifiable[_]): List[Double]
+		def typeVector(classifiable: Classifiable[_]): List[Double] = {
+			val types = new Array[Double](EntityTypes.values.size)
+			classifiable.entityTypes.foreach(type_val => types(type_val.id)=1.0)
+			types.toList
+		}
 	}
 
 	case class TrainInfo(source: String, destination: String, posTags: Array[Double]) extends Info {
 		def modelInfo: List[String] = List(source, destination)
 		override def furtherFeatures(classifiable: Classifiable[_]): List[Double] = {
-			posTags.toList ::: List(if (destination == classifiable.candidateEntity) 1.0 else 0.0)
+			// combine type(s)
+			typeVector(classifiable) :::
+				// w/ pos-tags
+				posTags.toList :::
+				// and class value
+				List(if (destination == classifiable.candidateEntity) 1.0 else 0.0)
 		}
 		override def toString: String = s"TrainInfo($source, $destination)"
 	}
 	case class ClassificationInfo(documentId: String, trieHit: TrieHit, posTags: Array[Double]) extends Info {
-		override def furtherFeatures(classifiable: Classifiable[_]): List[Double] = posTags.toList
+		override def furtherFeatures(classifiable: Classifiable[_]): List[Double] =
+			// combine type(s)
+			typeVector(classifiable) :::
+				// w/ pos-tags
+				posTags.toList
 		override def toString: String = s"ClassificationInfo($documentId, $trieHit)"
 	}
 
