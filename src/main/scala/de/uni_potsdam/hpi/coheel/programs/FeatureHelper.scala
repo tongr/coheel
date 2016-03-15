@@ -34,7 +34,6 @@ object FeatureHelper {
 
 		allCandidatesWithIndex.foreach { case (classifiable, i) =>
 			import classifiable._
-			EntityTypes.values.toBitMask
 
 			// create 'boolean' vector for assigned entity types
 			val types = new Array[Double](EntityTypes.values.size)
@@ -43,7 +42,7 @@ object FeatureHelper {
 				surfaceProb, surfaceRank(i), surfaceDeltaTops(i), surfaceDeltaSuccs(i),
 				contextProb, contextRank(i), contextDeltaTops(i), contextDeltaSuccs(i),
 				surfaceLinkProb
-			) ::: types.toList ::: classifiable.info.furtherFeatures(classifiable)
+			) ::: classifiable.info.furtherFeatures(classifiable)
 			featureLineIteratorFunction(FeatureLine[T](id, surfaceRepr, candidateEntity, classifiable.info, features))
 		}
 	}
