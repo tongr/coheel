@@ -13,8 +13,8 @@ object Util {
 	 * @return Some array with guaranteed size of 2 * contextSpreading + 1, None if that's not possible,
 	 *         because the array is to small.
 	 */
-	def extractContext(a: mutable.ArrayBuffer[String], position: Int, contextSpreading: Int = CONTEXT_SPREADING_DEFAULT): Option[mutable.ArrayBuffer[String]] = {
-		if (a.length < 2 * contextSpreading + 1)
+	def extractContext(a: mutable.ArrayBuffer[String], position: Int, contextSpreading: Int = CONTEXT_SPREADING_DEFAULT, allowUnderflow: Boolean = false): Option[mutable.ArrayBuffer[String]] = {
+		if (!allowUnderflow && a.length < 2 * contextSpreading + 1)
 			// if the text is not long enough to create a context, we abort, because the context probabilty is not comparable then
 			None
 		else  {
@@ -27,7 +27,9 @@ object Util {
 			val rangeToLeft  = spaceToLeft + (contextSpreading - spaceToRight)
 			val rangeToRight = spaceToRight + (contextSpreading - spaceToLeft)
 
-			assert(rangeToLeft + rangeToRight == 2 * contextSpreading)
+
+			assert(allowUnderflow || rangeToLeft + rangeToRight == 2 * contextSpreading)
+			assert(rangeToLeft + rangeToRight <= 2 * contextSpreading)
 			Some(a.slice(position - rangeToLeft, position + rangeToRight + 1))
 		}
 	}
