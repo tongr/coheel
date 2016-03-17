@@ -5,6 +5,9 @@ import java.util
 import de.uni_potsdam.hpi.coheel.programs.DataClasses.{EntityTypes, ClassificationInfo, FeatureLine}
 import weka.classifiers.Classifier
 import weka.core._
+import scala.collection.immutable.Set
+
+import scala.collection.mutable
 
 object CoheelClassifier {
 
@@ -68,7 +71,7 @@ class CoheelClassifier(classifier: Classifier) {
 	def classifyResultsWithSeedLogic(featureLine: Seq[FeatureLine[ClassificationInfo]]): scala.Option[FeatureLine[ClassificationInfo]] = {
 		var positivePredictions = List[FeatureLine[ClassificationInfo]]()
 		featureLine.foreach { featureLine =>
-			assert(featureLine.features.size == CoheelClassifier.NUMBER_OF_FEATURES || featureLine.features.size == CoheelClassifier.NUMBER_OF_FEATURES + 1)
+			assert(featureLine.features.size == instances.numAttributes() || featureLine.features.size + 1 == instances.numAttributes() )
 			val instance = buildInstance(featureLine)
 			instance.setDataset(instances)
 			if (classifier.classifyInstance(instance) == CoheelClassifier.POSITIVE_CLASS) {
@@ -87,7 +90,7 @@ class CoheelClassifier(classifier: Classifier) {
 	def classifyResultsWithCandidateLogic(featureLine: Seq[FeatureLine[ClassificationInfo]]): List[FeatureLine[ClassificationInfo]] = {
 		var positivePredictions = List[FeatureLine[ClassificationInfo]]()
 		featureLine.foreach { featureLine =>
-			assert(featureLine.features.size == CoheelClassifier.NUMBER_OF_FEATURES || featureLine.features.size == CoheelClassifier.NUMBER_OF_FEATURES + 1)
+			assert(featureLine.features.size == instances.numAttributes() || featureLine.features.size + 1 == instances.numAttributes() )
 			val instance = buildInstance(featureLine)
 			instance.setDataset(instances)
 			if (classifier.classifyInstance(instance) == CoheelClassifier.POSITIVE_CLASS) {
@@ -97,8 +100,48 @@ class CoheelClassifier(classifier: Classifier) {
 		positivePredictions
 	}
 
-	private def buildInstance(featureLine: FeatureLine[ClassificationInfo]): Instance = {
+	protected def buildInstance(featureLine: FeatureLine[ClassificationInfo]): Instance = {
 		val attValues = featureLine.features.toArray
+		//val instance = new DenseInstance(1.0, attValues)
+		// should use less memory (due to very sparse POS- and EntityType-attributes)
+		val instance = new SparseInstance(1.0, attValues)
+		instance
+	}
+}
+
+class FeatureFilteredCoheelClassifier(classifier: Classifier, blacklist: Set[String] = Set[String]()) extends CoheelClassifier(classifier) {
+	//// ignored: "context","contextRank","contextDeltaTop","contextDeltaSucc","NN","NNP","JJ","VB","CD","SYM","W"
+	//val blacklist = scala.collection.immutable.Set[String]("context","contextRank","contextDeltaTop","contextDeltaSucc","NN", "NNP", "JJ", "VB", "CD", "SYM", "W")
+
+	private val (attributes, featureFilter) = {
+		import CoheelClassifier.FEATURE_DEFINITION
+		val featureFilter = new mutable.ArrayBuffer[Boolean](FEATURE_DEFINITION.size)
+		val attributes = new util.ArrayList[Attribute](FEATURE_DEFINITION.size)
+		for ( i <- 0 to FEATURE_DEFINITION.size() ) {
+			val attr = FEATURE_DEFINITION.get(i)
+			val accept = !blacklist.contains( attr.name )
+			featureFilter(i) = accept
+			if ( accept )
+				attributes.add(attr)
+		}
+
+		(attributes, featureFilter.toArray)
+	}
+	private def filterFeatures(features: Array[Double]): Array[Double] = {
+		assert(features.length==featureFilter.length)
+		val acceptedFeaturesBuf = mutable.ArrayBuffer[Double](features.length)
+		for ( i <- 0 to features.length ) {
+			if( featureFilter(i) )
+				acceptedFeaturesBuf += features(i)
+		}
+		acceptedFeaturesBuf.toArray
+	}
+
+	override val instances = new Instances("Classification", attributes, 1)
+	instances.setClassIndex(instances.numAttributes)
+
+	override protected def buildInstance(featureLine: FeatureLine[ClassificationInfo]): Instance = {
+		val attValues = filterFeatures( featureLine.features.toArray )
 		//val instance = new DenseInstance(1.0, attValues)
 		// should use less memory (due to very sparse POS- and EntityType-attributes)
 		val instance = new SparseInstance(1.0, attValues)
