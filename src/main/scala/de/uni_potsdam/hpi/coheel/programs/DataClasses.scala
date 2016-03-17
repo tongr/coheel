@@ -27,6 +27,10 @@ object DataClasses {
 	}
 
 	case class WordInDocument(document: String, word: String, count: Int)
+
+	object LanguageModel {
+		val empty = LanguageModel(null, Map.empty)
+	}
 	case class LanguageModel(pageTitle: String, model: Map[String, Int]) {
 
 		// smoothing factor
