@@ -64,6 +64,7 @@ object CoheelClassifier {
 	}
 }
 
+@SerialVersionUID(-3360509244299376345L)
 class CoheelClassifier private(classifier: Classifier) extends Serializable {
 	/**
 	 * attribute filtered CoheelClassifier instance
