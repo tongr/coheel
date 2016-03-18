@@ -236,7 +236,7 @@ object DataClasses {
 		}
 		def urls(typeVector: Array[Boolean]): String = {
 			urls(
-				(0 to typeVector.length)
+				(0 until typeVector.length)
 					.filter(typeVector(_))
 					.map(EntityTypes(_))
 					.toArray)
