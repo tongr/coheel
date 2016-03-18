@@ -234,6 +234,13 @@ object DataClasses {
 		def urls(types: Array[EntityTypes.Value]): String = {
 			types.map(url(_)).mkString("[", ",", "]")
 		}
+		def urls(typeVector: Array[Boolean]): String = {
+			urls(
+				(0 to typeVector.length)
+					.filter(typeVector(_))
+					.map(EntityTypes(_))
+					.toArray)
+		}
 		def typeVector(types: Array[EntityTypes.Value]): Array[Boolean] = {
 			val typeVector = new Array[Boolean](EntityTypes.values.size)
 			types.foreach(type_val => typeVector(type_val.id)=true)
