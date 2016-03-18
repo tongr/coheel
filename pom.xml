@@ -277,8 +277,9 @@
 			<plugin>
 				<groupId>net.alchim31.maven</groupId>
 				<artifactId>scala-maven-plugin</artifactId>
-				<version>3.1.4</version>
+				<version>3.2.1</version>
 				<configuration>
+					<scalaCompatVersion>2.10</scalaCompatVersion>
 					<launchers>
 						<launcher>
 							<id>ProgramRunner</id>
