@@ -118,6 +118,7 @@ class CoheelClassifier private(classifier: Classifier) extends Serializable {
 	/**
 	 * Classifies a given group of instances, which result from the same link/trie hit in the original text, using candidate logic.
 	 */
+	@SerialVersionUID(-3360509244299376345L)
 	def classifyResultsWithCandidateLogic(featureLine: Seq[FeatureLine[ClassificationInfo]]): List[FeatureLine[ClassificationInfo]] = {
 		var positivePredictions = List[FeatureLine[ClassificationInfo]]()
 		featureLine.foreach { featureLine =>
