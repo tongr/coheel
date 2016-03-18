@@ -137,9 +137,9 @@ object DataClasses {
 		// Maybe move further features from Info to extra class? It's not really extra info?
 		def furtherFeatures(classifiable: Classifiable[_]): List[Double]
 		def typeVector(classifiable: Classifiable[_]): List[Double] = {
-			val types = new Array[Double](EntityTypes.values.size)
-			classifiable.entityTypes.foreach(type_val => types(type_val.id)=1.0)
-			types.toList
+			EntityTypes.typeVector(classifiable.entityTypes)
+				.map( if (_) 1.0 else 0.0 )
+				.toList
 		}
 	}
 
@@ -227,6 +227,18 @@ object DataClasses {
 		val UnitOfWork = Value("<http://dbpedia.org/ontology/UnitOfWork>")
 		val CelestialBody = Value("<http://dbpedia.org/ontology/CelestialBody>")
 		val Product = Value("<http://schema.org/Product>")
+
+		def url(value: EntityTypes.Value): String = {
+			value.toString.substring(1,value.toString.length-1)
+		}
+		def urls(types: Array[EntityTypes.Value]): String = {
+			types.map(url(_)).mkString("[", ",", "]")
+		}
+		def typeVector(types: Array[EntityTypes.Value]): Array[Boolean] = {
+			val typeVector = new Array[Boolean](EntityTypes.values.size)
+			types.foreach(type_val => typeVector(type_val.id)=true)
+			typeVector
+		}
 	}
 	case class Neighbour(entity: String, prob: Double)
 
