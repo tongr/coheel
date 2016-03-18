@@ -7,7 +7,7 @@ import de.uni_potsdam.hpi.coheel.programs.{CoheelLogger, CoheelProgram}
 import de.uni_potsdam.hpi.coheel.programs.DataClasses.{ClassificationInfo, FeatureLine}
 import de.uni_potsdam.hpi.coheel.util.Timer
 import org.apache.commons.io.FileUtils
-import weka.classifiers.CostMatrix
+import weka.classifiers.{Classifier, CostMatrix}
 import weka.classifiers.bayes.NaiveBayes
 import weka.classifiers.functions.{Logistic, MultilayerPerceptron, SimpleLogistic}
 import weka.classifiers.meta.{SerialVersionAccess, CostSensitiveClassifier}
@@ -43,6 +43,9 @@ object MachineLearningTestSuite {
 	import CoheelLogger._
 
 	val r = new Random(21011991)
+	val limitInstances =
+		//for testing: 100000
+		Int.MaxValue
 
 	def main(args: Array[String]) = {
 		val (train, test) = readTrainingDataAndBuildInstances()
@@ -94,7 +97,7 @@ object MachineLearningTestSuite {
 		val scoresSource = Source.fromFile(new File(s"output/training-data-$suffix.wiki"))
 		var currentGroup = mutable.ArrayBuffer[Instance]()
 		var lastId: String = ""
-		val lines = scoresSource.getLines()
+		val lines = scoresSource.getLines().take(limitInstances)
 
 		lines.foreach { line =>
 			val split = line.split("\t")
@@ -107,6 +110,7 @@ object MachineLearningTestSuite {
 			}
 			currentGroup += buildInstance(split)
 		}
+		scoresSource.close()
 		groups
 	}
 
@@ -119,11 +123,14 @@ object MachineLearningTestSuite {
 			println(new java.util.Date)
 			log.info(s"Starting training with ${FreeMemory.get(true)} MB of RAM")
 			val runtimeTry = Try(Timer.timeFunction {
-				classifier.buildClassifier(train)
+				classifier.fit(train)
 			})
 			log.info(s"Finished training with ${FreeMemory.get(true)} MB of RAM")
 			runtimeTry match {
-				case Failure(e) => println(s"    $name failed with ${e.getMessage}")
+				case Failure(e) => {
+					sys.error(s"    $name failed with ${e.getMessage}")
+					e.printStackTrace()
+				}
 				case Success(trainingTime) =>
 					println(s"    $name in ${msToMin(trainingTime.toInt)} min")
 
@@ -134,8 +141,8 @@ object MachineLearningTestSuite {
 					val instances = test.enumerateInstances().asScala.map { case instance: CoheelInstance => instance }.toList
 					val instancesGroup = instances.groupBy { instance => instance.info.id }
 					// build coheel classifier, which implements special group logic on top of classifier results
-					val seedClassifier = new CoheelClassifier(classifier)
-					val candidateClassifier = new CoheelClassifier(classifier)
+					val seedClassifier = classifier
+					val candidateClassifier = classifier
 
 					val fw = new FileWriter(s"no-link-seeds-$i.txt", true)
 					val classificationTime = Timer.timeFunction {
@@ -255,11 +262,11 @@ object MachineLearningTestSuite {
 			val baseClassifier = classifier()
 			val baseClassifierName = baseClassifier.getClass.getSimpleName
 			List(
-				(baseClassifierName, baseClassifier),
-				(s"$baseClassifierName with 10 x FN cost, minimize expected cost = true", cost1),
-//				(s"$baseClassifierName with 10 x FN cost, minimize expected cost = false", cost2),
-				(s"$baseClassifierName with 10 x FP cost, minimize expected cost = true", cost3)
-//				(s"$baseClassifierName with 10 x FP cost, minimize expected cost = false", cost4)
+				(baseClassifierName,  CoheelClassifier.newInstance(baseClassifier)),
+				(s"$baseClassifierName with 10 x FN cost, minimize expected cost = true",  CoheelClassifier.newInstance(cost1)),
+//				(s"$baseClassifierName with 10 x FN cost, minimize expected cost = false",  CoheelClassifier.newInstance(cost2)),
+				(s"$baseClassifierName with 10 x FP cost, minimize expected cost = true",  CoheelClassifier.newInstance(cost3))
+//				(s"$baseClassifierName with 10 x FP cost, minimize expected cost = false",  CoheelClassifier.newInstance(cost4))
 			)
 		}
 	}

@@ -4,10 +4,11 @@ import java.util
 
 import de.uni_potsdam.hpi.coheel.programs.DataClasses.{EntityTypes, ClassificationInfo, FeatureLine}
 import weka.classifiers.Classifier
+import weka.classifiers.meta.FilteredClassifier
 import weka.core._
+import weka.filters.unsupervised.attribute.Remove
 import scala.collection.immutable.Set
 
-import scala.collection.mutable
 
 object CoheelClassifier {
 
@@ -55,16 +56,46 @@ object CoheelClassifier {
 		attrs.add(classAttr)
 		attrs
 	}
+
+	def newInstance(classifier: Classifier): CoheelClassifier = {
+		//new CoheelClassifier(classifier)
+		// alternative (filtered):
+		new CoheelClassifier(classifier, Set[String]("context","contextRank","contextDeltaTop","contextDeltaSucc","NN", "NNP", "JJ", "VB", "CD", "SYM", "W"))
+	}
 }
 
-class CoheelClassifier(classifier: Classifier) {
+class CoheelClassifier private(classifier: Classifier) extends Serializable {
+	/**
+	 * attribute filtered CoheelClassifier instance
+	 * @param classifier the classifier configuration to be used (i.e., fitted)
+	 * @param blacklist the attribute blacklist to be applied
+	 * @return the filtered instance
+	 */
+	def this(classifier: Classifier, blacklist: Set[String]) = this({
+		// find attributes to be removed
+		import CoheelClassifier.FEATURE_DEFINITION
+		val removeBuff = (0 until FEATURE_DEFINITION.size())
+			  .filter{ i=> blacklist.contains(FEATURE_DEFINITION.get(i).name)}
+			  .toArray
+
+		// create a remove filtered classifier
+		val attrRemover: Remove = new Remove()
+		attrRemover.setAttributeIndicesArray(removeBuff)
+		//debug: println(s"using attributes: ${attrRemover.getAttributeIndices}")
+		val fc = new FilteredClassifier()
+		fc.setFilter(attrRemover)
+		fc.setClassifier(classifier)
+		fc
+	})
 
 	val instances = new Instances("Classification", CoheelClassifier.FEATURE_DEFINITION, 1)
 	instances.setClassIndex(CoheelClassifier.NUMBER_OF_FEATURES)
+	val positiveClass = CoheelClassifier.POSITIVE_CLASS
 
 	/**
 	 * Classifies a given group of instances, which result from the same link/trie hit in the original text.
 	 * Only if exactly one true prediction is given, the function returns a result.
+	 *
 	 * @param featureLine The features of all possible links.
 	 * @return The predicted link or None, if no link is predicted.
 	 */
@@ -74,7 +105,7 @@ class CoheelClassifier(classifier: Classifier) {
 			assert(featureLine.features.size == instances.numAttributes() || featureLine.features.size + 1 == instances.numAttributes() )
 			val instance = buildInstance(featureLine)
 			instance.setDataset(instances)
-			if (classifier.classifyInstance(instance) == CoheelClassifier.POSITIVE_CLASS) {
+			if (classifier.classifyInstance(instance) == positiveClass) {
 				positivePredictions ::= featureLine
 			}
 		}
@@ -93,7 +124,7 @@ class CoheelClassifier(classifier: Classifier) {
 			assert(featureLine.features.size == instances.numAttributes() || featureLine.features.size + 1 == instances.numAttributes() )
 			val instance = buildInstance(featureLine)
 			instance.setDataset(instances)
-			if (classifier.classifyInstance(instance) == CoheelClassifier.POSITIVE_CLASS) {
+			if (classifier.classifyInstance(instance) == positiveClass) {
 				positivePredictions ::= featureLine
 			}
 		}
@@ -107,44 +138,10 @@ class CoheelClassifier(classifier: Classifier) {
 		val instance = new SparseInstance(1.0, attValues)
 		instance
 	}
-}
 
-class FeatureFilteredCoheelClassifier(classifier: Classifier, blacklist: Set[String] = Set[String]()) extends CoheelClassifier(classifier) {
-	//// ignored: "context","contextRank","contextDeltaTop","contextDeltaSucc","NN","NNP","JJ","VB","CD","SYM","W"
-	//val blacklist = scala.collection.immutable.Set[String]("context","contextRank","contextDeltaTop","contextDeltaSucc","NN", "NNP", "JJ", "VB", "CD", "SYM", "W")
-
-	private val (attributes, featureFilter) = {
-		import CoheelClassifier.FEATURE_DEFINITION
-		val featureFilter = new mutable.ArrayBuffer[Boolean](FEATURE_DEFINITION.size)
-		val attributes = new util.ArrayList[Attribute](FEATURE_DEFINITION.size)
-		for ( i <- 0 to FEATURE_DEFINITION.size() ) {
-			val attr = FEATURE_DEFINITION.get(i)
-			val accept = !blacklist.contains( attr.name )
-			featureFilter(i) = accept
-			if ( accept )
-				attributes.add(attr)
-		}
-
-		(attributes, featureFilter.toArray)
-	}
-	private def filterFeatures(features: Array[Double]): Array[Double] = {
-		assert(features.length==featureFilter.length)
-		val acceptedFeaturesBuf = mutable.ArrayBuffer[Double](features.length)
-		for ( i <- 0 to features.length ) {
-			if( featureFilter(i) )
-				acceptedFeaturesBuf += features(i)
-		}
-		acceptedFeaturesBuf.toArray
-	}
-
-	override val instances = new Instances("Classification", attributes, 1)
-	instances.setClassIndex(instances.numAttributes)
-
-	override protected def buildInstance(featureLine: FeatureLine[ClassificationInfo]): Instance = {
-		val attValues = filterFeatures( featureLine.features.toArray )
-		//val instance = new DenseInstance(1.0, attValues)
-		// should use less memory (due to very sparse POS- and EntityType-attributes)
-		val instance = new SparseInstance(1.0, attValues)
-		instance
+	def fit(data: Instances): Unit = {
+		assert(data.numAttributes() == instances.numAttributes(), s"expected attributes ${(0 until instances.numAttributes()).map(instances.attribute(_))}, actual attributes ${(0 until data.numAttributes()).map(data.attribute(_))}")
+		// TODO check attribute names as well?!
+		classifier.buildClassifier(data)
 	}
 }
