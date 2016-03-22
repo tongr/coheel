@@ -101,26 +101,30 @@ class CoheelClassifier private(classifier: Classifier) extends Serializable {
 	 * @return The predicted link or None, if no link is predicted.
 	 */
 	def classifyResultsWithSeedLogic(featureLine: Seq[FeatureLine[ClassificationInfo]]): scala.Option[FeatureLine[ClassificationInfo]] = {
-		var positivePredictions = List[FeatureLine[ClassificationInfo]]()
-		featureLine.foreach { featureLine =>
-			assert(featureLine.features.size == instances.numAttributes() || featureLine.features.size + 1 == instances.numAttributes() )
-			val instance = buildInstance(featureLine)
-			instance.setDataset(instances)
-			if (classifier.classifyInstance(instance) == positiveClass) {
-				positivePredictions ::= featureLine
-			}
-		}
-		if (positivePredictions.size == 1)
-			positivePredictions.headOption
+		asSeed( classify( featureLine ) )
+	}
+
+	/**
+	  * Classifies a given group of instances, which result from the same link/trie hit in the original text, using candidate logic.
+	  */
+	def classifyResultsWithCandidateLogic(featureLine: Seq[FeatureLine[ClassificationInfo]]): List[FeatureLine[ClassificationInfo]] = classify(featureLine)
+
+	/**
+	  * transforms a classification result of one group of instance into a valid seed classification
+	  * @param predictions the predictions beeing made
+	  * @return the seed or None
+    */
+	def asSeed(predictions: List[FeatureLine[ClassificationInfo]]): scala.Option[FeatureLine[ClassificationInfo]] = {
+		if (predictions.size == 1)
+			predictions.headOption
 		else
 			None
 	}
 
 	/**
-	 * Classifies a given group of instances, which result from the same link/trie hit in the original text, using candidate logic.
-	 */
-	@SerialVersionUID(-3360509244299376345L)
-	def classifyResultsWithCandidateLogic(featureLine: Seq[FeatureLine[ClassificationInfo]]): List[FeatureLine[ClassificationInfo]] = {
+	  * Classifies a given group of instances, which result from the same link/trie hit in the original text.
+	  */
+	def classify(featureLine: Seq[FeatureLine[ClassificationInfo]]): List[FeatureLine[ClassificationInfo]] = {
 		var positivePredictions = List[FeatureLine[ClassificationInfo]]()
 		featureLine.foreach { featureLine =>
 			assert(featureLine.features.size == instances.numAttributes() || featureLine.features.size + 1 == instances.numAttributes() )
