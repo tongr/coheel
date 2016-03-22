@@ -137,6 +137,7 @@ object DataClasses {
 		// Maybe move further features from Info to extra class? It's not really extra info?
 		def furtherFeatures(classifiable: Classifiable[_]): List[Double]
 		def typeVector(classifiable: Classifiable[_]): List[Double] = {
+			// create 'boolean' vector for assigned entity types
 			EntityTypes.typeVector(classifiable.entityTypes)
 				.map( if (_) 1.0 else 0.0 )
 				.toList
@@ -205,6 +206,7 @@ object DataClasses {
 
 	case class SurfaceProb(surface: String, destination: String, prob: Double, occurrences: Int, types:Array[EntityTypes.Value])
 	object EntityTypes extends Enumeration {
+		type EntityTypes = Value
 		// possible types
 		val Untyped = Value("<>")
 		val Person = Value("<http://xmlns.com/foaf/0.1/Person>")
