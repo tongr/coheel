@@ -35,9 +35,6 @@ object FeatureHelper {
 		allCandidatesWithIndex.foreach { case (classifiable, i) =>
 			import classifiable._
 
-			// create 'boolean' vector for assigned entity types
-			val types = new Array[Double](EntityTypes.values.size)
-			classifiable.entityTypes.foreach(type_val => types(type_val.id)=1.0)
 			val features = List(
 				surfaceProb, surfaceRank(i), surfaceDeltaTops(i), surfaceDeltaSuccs(i),
 				contextProb, contextRank(i), contextDeltaTops(i), contextDeltaSuccs(i),
