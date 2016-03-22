@@ -56,11 +56,16 @@ object SecondOrderFeatures {
 				for (i <- 0 until in.size) {
 					val currentVal = field(in(i)._1)
 					var deltaSucc = Double.NaN
-					var j = i
-					while (j < in.size && deltaSucc.isNaN) {
-						if (field(in(j)._1) != currentVal)
-							deltaSucc = currentVal - field(in(j)._1)
-						j += 1
+//					var j = i
+//					while (j < in.size && deltaSucc.isNaN) {
+//						if (field(in(j)._1) != currentVal)
+//							deltaSucc = currentVal - field(in(j)._1)
+//						j += 1
+//					}
+					// incorrect but more efficient
+					val j = i+1
+					if(j < in.size) {
+						deltaSucc = currentVal - field(in(j)._1)
 					}
 					deltaSuccs(in(i)._2) = deltaSucc
 				}
